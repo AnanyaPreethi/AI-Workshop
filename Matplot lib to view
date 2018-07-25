@@ -1,0 +1,16 @@
+#first we are importing the matplotlib module for graphical representation of words
+%matplotlib inline
+import matplotlib.pyplot as plt
+
+#Pareto chart will be created here for top 60 words
+count = count_frame.sort_values('Count', ascending = False)
+fig = plt.figure(figsize=(16,9))
+ax = fig.gca()
+count['Count'][:60].plot(kind = 'bar', ax = ax)
+#graphical labels
+
+ax.set_title('Frequency of the most common words')
+ax.set_ylabel('Frequency of word')
+ax.set_xlabel('word')
+#show the representation with plt.show() 
+plt.show()

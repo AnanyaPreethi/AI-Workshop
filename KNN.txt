@@ -1,0 +1,70 @@
+#data preparation with scaling
+
+from sklearn.preprocessing import scale
+import pandas as pd
+num_cols = ['Sepal_Length', 'Sepal_Width', 'Petal_Length', 'Petal_Width']
+flowers_scaled = flowers(iris.data[num_cols])
+flowers_scaled = pd.DataFrame(flowers_scaled, columns = num_cols)
+print(flowers_scaled.describe().round(3))
+
+#now we will proceed with the split and for that we will use matrices
+
+levels = {'setosa':0, 'versicolor':1, 'virginica':2}
+flowers_scaled['Species'] = [levels[x] for x in flowers.data['Species']]
+flowers_scaled.head()
+
+## Split the data into a training and test set by Bernoulli sampling
+
+from sklearn.model_selection import train_test_split
+import numpy as np
+np.random.seed(3456)
+flowers_split = train_test_split(np.asmatrix(flowers_scaled), test_size = 75)
+flowers_train_features = flowers_split[0][:, :4]
+flowers_train_labels = np.ravel(flowers_split[0][:, 4])
+flowers_test_features = flowers_split[1][:, :4]
+flowers_test_labels = np.ravel(flowers_split[1][:, 4])
+print(flowers_train_features.shape)
+print(flowers_train_labels.shape)
+print(flowers_test_features.shape)
+print(flowers_test_labels.shape)
+
+# Define and train the KNN model
+from sklearn.neighbors import KNeighborsClassifier
+KNN_mod = KNeighborsClassifier(n_neighbors = 3)
+KNN_mod.fit(flowers_train_features, flowers_train_labels)
+
+#now let us look at the steps to create model predictions and compute accuracy
+flowers_test = pd.DataFrame(flowers_test_features, columns = num_cols)
+flowers_test['predicted'] = KNN_mod.predict(flowers_test_features)
+flowers_test['correct'] = [1 if x == z else 0 for x, z in zip(flowers_test['predicted'], flowers_test_labels)]
+accuracy = 100.0 * float(sum(flowers_test['correct'])) / float(flowers_test.shape[0])
+print(accuracy)
+
+#Now we will examine the plots of the classifications of this flower iris species.
+
+
+levels = {0:'setosa', 1:'versicolor', 2:'virginica'}
+flowers_test['Species'] = [levels[x] for x in flowers_test['predicted']]
+markers = {1:'^', 0:'o'}
+colors = {'setosa':'blue', 'versicolor':'green', 'virginica':'red'}
+def plot_shapes(df, col1,col2,  markers, colors):
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    ax = plt.figure(figsize=(6, 6)).gca() # define plot axis
+    for m in markers: # iterate over marker dictioary keys
+        for c in colors: # iterate over color dictionary keys
+            df_temp = df[(df['correct'] == m)  & (df['Species'] == c)]
+            sns.regplot(x = col1, y = col2, 
+                        data = df_temp,  
+                        fit_reg = False, 
+                        scatter_kws={'color': colors[c]},
+                        marker = markers[m],
+                        ax = ax)
+    plt.xlabel(col1)
+    plt.ylabel(col2)
+    plt.title('Iris species by color')
+    return 'Done'
+plot_shapes(flowers_test, 'Petal_Width', 'Sepal_Length', markers, colors)
+plot_shapes(flowers_test, 'Sepal_Width', 'Sepal_Length', markers, colors)
+
+
